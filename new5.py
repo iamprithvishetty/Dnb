@@ -4,18 +4,20 @@ import paho.mqtt.client as mqtt
 from threading import Thread
 import threading
 import time
-import os, urlparse
+import os#, urlparse
 import sys
 import re
 import random
 import gspread
+import spidev
 from oauth2client.service_account import ServiceAccountCredentials
+from pymouse import PyMouse
 scope = ['https://www.googleapis.com/auth/drive.readonly']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('credentials.json',scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/Dnb/credentials.json',scope)
 client = gspread.authorize(credentials)
 sheet = client.open('question_dnb').sheet1
 #from Quiz_template import Ui_QuizWindow
-file_object=open('event_data.txt','r')
+file_object=open('/home/pi/Dnb/event_data.txt','r')
 Event_Data = file_object.read().split('~')
 file_object.close()
 Event = Event_Data[0]
@@ -24,19 +26,19 @@ Venue = Event_Data[2]
 photo =[]
 c=0
 a=0
-b=0	
+b=0 
 n=0
 s=0
 data =[]
 text = "Correct !!"
 #--> Automatic File Read
-FolderPath = r'C:\Prithvi\Notice_Board\img\\' #r-->Raw string & Folder path goes here
+FolderPath = '/home/pi/Dnb/img/' #r-->Raw string & Folder path goes here
 filename = os.listdir(FolderPath)
 length = len(filename)
 n = 0
 while n!= length-1:
-	filename[n] = FolderPath+filename[n]
-	n=n+1
+    filename[n] = FolderPath+filename[n]
+    n=n+1
 photo = filename
 #print(photo)
 #-->Photos Filename will be saved in an array named 'photo'
@@ -44,57 +46,56 @@ class Ui_MainWindow(object): #--> Main Window
     global b
     global c
 
-	
+    
     def openWindow(self):
-		global s
-		s=0
-		def set():
-		 global n
-		 n=1
-	###	 
-		global n
-		global s    
-		timer = threading.Timer(10.0,set)
-		timer.start()
-		while s!=1:
-			if n==1:
-				timer.cancel()
-				if __name__ == "__main__":
-					global app1
-					self.window = QtWidgets.QMainWindow()
-					app1 = self.window
-					self.ui = Ui_QuizWindow()
-					self.ui.setupUi(self.window)
-					self.window.show()
-					b=1
-					print(b)
-					print(n)
-					print(c)
-					n=0
-					s=1
+        global s
+        s=0
+        def set():
+         global n
+         n=1
+    ###  
+        global n  
+        timer = threading.Timer(10.0,set)
+        timer.start()
+        while s!=1:
+            if n==1:
+                timer.cancel()
+                if __name__ == "__main__":
+                    global app1
+                    self.window = QtWidgets.QMainWindow()
+                    app1 = self.window
+                    self.ui = Ui_QuizWindow()
+                    self.ui.setupUi(self.window)
+                    self.window.show()
+                    b=1
+                    print(b)
+                    print(n)
+                    print(c)
+                    n=0
+                    s=1
         
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1600, 900)
+        MainWindow.resize(1600, 768)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.background_image = QtWidgets.QLabel(self.centralwidget)
-        self.background_image.setGeometry(QtCore.QRect(0, 0, 1600, 900))
+        self.background_image.setGeometry(QtCore.QRect(0, 0, 1360, 768))
         self.background_image.setAutoFillBackground(False)
         self.background_image.setText("")
-        self.background_image.setPixmap(QtGui.QPixmap("C:\Users\TOSHIBA\Downloads\DNB_2.jpg"))
+        self.background_image.setPixmap(QtGui.QPixmap("/home/pi/Dnb/DNB_2.jpg"))
         self.background_image.setScaledContents(True)
         self.background_image.setAlignment(QtCore.Qt.AlignCenter)
         self.background_image.setObjectName("background_image")
         self.image_display = QtWidgets.QLabel(self.centralwidget)
-        self.image_display.setGeometry(QtCore.QRect(76, 252, 961, 591))
+        self.image_display.setGeometry(QtCore.QRect(65, 214, 817, 502))
         self.image_display.setAutoFillBackground(False)
         self.image_display.setPixmap(QtGui.QPixmap(photo[a]))
         self.image_display.setScaledContents(True)
         self.image_display.setAlignment(QtCore.Qt.AlignCenter)
         self.image_display.setObjectName("")
         self.quiz_button = QtWidgets.QPushButton(self.centralwidget)
-        self.quiz_button.setGeometry(QtCore.QRect(1160, 690, 381, 141))
+        self.quiz_button.setGeometry(QtCore.QRect(986, 586, 324, 120))
         self.quiz_button.clicked.connect(self.openWindow)
         font = QtGui.QFont()
         font.setFamily("Consolas")
@@ -119,9 +120,9 @@ class Ui_MainWindow(object): #--> Main Window
         self.quiz_button.setAutoDefault(False)
         self.quiz_button.setObjectName("quiz_button")
         self.event_display = QtWidgets.QLabel(self.centralwidget)
-        self.event_display.setGeometry(QtCore.QRect(1176, 420, 361, 81))
+        self.event_display.setGeometry(QtCore.QRect(1000, 357, 307, 69))
         font = QtGui.QFont()
-        font.setPointSize(32)
+        font.setPointSize(20)
         font.setFamily("Times New Roman")
         self.event_display.setFont(font)
         self.event_display.setTextFormat(QtCore.Qt.RichText)
@@ -130,42 +131,42 @@ class Ui_MainWindow(object): #--> Main Window
         self.event_display.setWordWrap(True)
         self.event_display.setObjectName("event_display")
         self.date_dispaly = QtWidgets.QLabel(self.centralwidget)
-        self.date_dispaly.setGeometry(QtCore.QRect(1280, 500, 251, 51))
+        self.date_dispaly.setGeometry(QtCore.QRect(1088, 425, 213, 43))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
-        font.setPointSize(24)
+        font.setPointSize(16)
         self.date_dispaly.setFont(font)
         self.date_dispaly.setObjectName("date_dispaly")
         self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(1180, 500, 91, 51))
+        self.label.setGeometry(QtCore.QRect(1003, 425, 77, 43))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
-        font.setPointSize(24)
+        font.setPointSize(16)
         font.setBold(True)
         font.setWeight(75)
         self.label.setFont(font)
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(1180, 560, 111, 51))
+        self.label_2.setGeometry(QtCore.QRect(1003, 476, 94, 43))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
-        font.setPointSize(24)
+        font.setPointSize(16)
         font.setBold(True)
         font.setWeight(75)
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.venue_display = QtWidgets.QLabel(self.centralwidget)
-        self.venue_display.setGeometry(QtCore.QRect(1310, 560, 201, 51))
+        self.venue_display.setGeometry(QtCore.QRect(1113, 476, 171, 43))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
-        font.setPointSize(24)
+        font.setPointSize(16)
         font.setBold(False)
         font.setWeight(50)
         self.venue_display.setFont(font)
         self.venue_display.setObjectName("venue_display")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1600, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1360, 17))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -177,8 +178,8 @@ class Ui_MainWindow(object): #--> Main Window
         self.timer = QTimer()
         self.timer.timeout.connect(self._update)
         self.timer.start(1000)
-		
-		
+        
+        
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -190,8 +191,8 @@ class Ui_MainWindow(object): #--> Main Window
         self.label.setText(_translate("MainWindow", "DATE:"))
         self.label_2.setText(_translate("MainWindow", "VENUE:"))
         self.venue_display.setText(_translate("MainWindow", Venue))
-	
-		
+    
+        
     def _update(self):
         global c
         global a
@@ -209,18 +210,18 @@ class Ui_MainWindow(object): #--> Main Window
         self.venue_display.setText(_translate("MainWindow", Venue))
         self.image_display.setPixmap(QtGui.QPixmap(photo[a]))
         self.image_display.setScaledContents(True)
-		#--> Timer for 10 seconds
+        #--> Timer for 10 seconds
         c=c+1
         if c%5 == 0 :
             a=a+1
             if a == len(photo)-1 :
-			    a=0
+                a=0
             if c==100 :
-			    c=0
-		#-->
+                c=0
+        #-->
 
-#################################################################			
-				
+#################################################################           
+                
 class Ui_QuizWindow(object):
     def setupUi(self, QuizWindow):
         global counter
@@ -233,7 +234,7 @@ class Ui_QuizWindow(object):
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(-10, 10, 1600, 900))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("image.jpg"))
+        self.label.setPixmap(QtGui.QPixmap("/home/pi/Dnb/image.jpg"))
         self.label.setScaledContents(True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
@@ -257,7 +258,7 @@ class Ui_QuizWindow(object):
         self.correct.setFont(font)
         self.correct.setObjectName("correct")
         self.Question_display = QtWidgets.QLabel(self.centralwidget)
-        self.Question_display.setGeometry(QtCore.QRect(150, 230, 1231, 81))
+        self.Question_display.setGeometry(QtCore.QRect(150, 230, 1231, 150))
         font = QtGui.QFont()
         font.setFamily("Consolas")
         font.setPointSize(24)
@@ -349,7 +350,7 @@ class Ui_QuizWindow(object):
         self.answer_4.setText(_translate("QuizWindow", data[4]))
         self.label_3.setText(_translate("QuizWindow", "Time Remaining !"))
         self.correct.setText(_translate("QuizWindow", ""))
-		
+        
     def _update(self):
         global counter
         global app1
@@ -365,8 +366,8 @@ class Ui_QuizWindow(object):
         self.answer_4.setText(_translate("QuizWindow", data[4]))
         self.label_3.setText(_translate("QuizWindow", "Time Remaining !"))
         if counter > 0 :
-		 counter=counter - 1
-		 self.count_display.setProperty("value", counter)
+         counter=counter - 1
+         self.count_display.setProperty("value", counter)
         if counter <= 0:
          counter = counter-1
          if counter < 0:
@@ -395,13 +396,13 @@ class Ui_QuizWindow(object):
          if counter == -3:
           print(data[6])
           quit()
-		  #app.quit()
+          #app.quit()
 
 
 def quit():
   global app1
   app1.close()
-		 
+         
 
 ########################################################################
 
@@ -423,7 +424,7 @@ def on_message(client, obj, msg):
         file_object=open('event_data.txt','w')
         file_object.write(Event+'~'+Date+'~'+Venue)
         file_object.close()
-		
+        
 def on_publish(client, obj, mid):
     print("mid: " + str(mid))
 
@@ -444,10 +445,10 @@ topic = 'notice'
 
 # Connect
 mqttc.username_pw_set("shgibuqt", "Kz_94OIvkHf1")
-mqttc.connect("m15.cloudmqtt.com", "17310")
+mqttc.connect("m15.cloudmqtt.com", 17310)
 
 # Start subscribe, with QoS level 0
-mqttc.subscribe(topic, 0)		
+mqttc.subscribe(topic, 0)      
 #--------
 def sqImport(tId):
     if tId == 0:
@@ -467,17 +468,70 @@ def sqImport(tId):
              ui.setupUi(MainWindow)
              MainWindow.show() 
              sys.exit(app.exec_())
-    '''if tId == 2:
-		while 1:
-			print('8')'''
-            	
- 			
+    if tId == 2:
+        #import pyautogui
+        from serial import Serial
+        port='/dev/ttyACM0'
+        baudrate= 115200
+        ser = Serial(port,baudrate)
+        from pymouse import PyMouse
+        #pyautogui.PAUSE = 2.5
+        push=1
+        counter = 0
+        m=PyMouse()
+        max_v=10
+        centre=max_v/2
+        threshold=max_v/4
+        j=m.position()[0]
+        k=m.position()[1]
+        mainv=[0,0,0]
+        def C_value(this_value,centre):
+          reading = this_value*max_v/1024
+          center=centre
+          distance = reading - center
+          if abs(distance) < threshold: 
+           distance = 0
+          return distance
+
+
+        while 1:
+            try:                                 
+                while True:
+                  value = ser.readline().decode()
+                  #chop(value)
+                  #value2=int(value[4:7])
+                  #button=int(value[8:9])
+                  '''print(mainv[0])
+                  print(mainv[1])
+                  print(mainv[2])'''
+                  x=int(value.split('-')[1])
+                  y=int(value.split('-')[0])
+                  push=int(value.split('-')[2])
+                  #x_max = m.screen_size()[0]
+                  #y_max = m.screen_size()[1]
+                  x_new= int(C_value(x,centre))
+                  y_new= int(C_value(y,centre))
+                  #print(x_new,y_new,push)
+                  m.move(j+x_new,k+y_new)
+                  j=m.position()[0]
+                  k=m.position()[1]
+                  if push==0:
+                   counter = 1
+                  if counter-push == 0:
+                   m.click(j+x_new,k+y_new)
+                   counter = 0
+            except:
+                print('Error')
+
+
+
+            
 threadA = Thread(target = sqImport, args=[0])
 threadB = Thread(target = sqImport, args=[1])
 threadC = Thread(target = sqImport, args=[2])
 threadA.start()
 threadB.start()
-#threadC.start()
+threadC.start()
 threadA.join()
 threadB.join()
-#threadC.join()
+threadC.join()
